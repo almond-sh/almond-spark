@@ -9,7 +9,7 @@ object Deps {
   def ammoniteRepl     = mvn"sh.almond.ammonite:::ammonite-repl:${Versions.ammonite}"
 
   def classPathUtil = mvn"io.get-coursier::class-path-util:0.1.4"
-  def jettyServer   = mvn"org.eclipse.jetty:jetty-server:9.4.58.v20250814"
+  def jettyServer   = mvn"org.eclipse.jetty:jetty-server:12.1.13"
   def jsoniterScalaCore =
     mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core:${Versions.jsoniterScala}"
   def jsoniterScalaMacros =
