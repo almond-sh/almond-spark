@@ -6,6 +6,8 @@ Run [spark](https://spark.apache.org/) calculations from [Almond](https://github
 
 *almond-spark* allows to create SparkSessions from Almond. It passes some Almond internals to a `SparkSession`, so that spark calculations can be driven from Almond, as one would do from a [spark-shell](https://spark.apache.org/docs/2.3.1/quick-start.html#interactive-analysis-with-the-spark-shell).
 
+The README below is more about the integration with [Ammonite](https://github.com/lihaoyi/Ammonite) ([Almond fork](https://github.com/almond-sh/Ammonite)). See the [Almond documentation](https://almond.sh/docs/usage-spark) for the integration in Almond itself.
+
 <img src="ammonite-spark.png" width="800">
 
 ## Table of content
