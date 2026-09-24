@@ -1,10 +1,10 @@
-# ammonite-spark
+# almond-spark
 
-Run [spark](https://spark.apache.org/) calculations from [Ammonite](http://ammonite.io/)
+Run [spark](https://spark.apache.org/) calculations from [Almond](https://github.com/almond-sh/almond)
 
-[![Build Status](https://github.com/alexarchambault/ammonite-spark/actions/workflows/ci.yml/badge.svg)](https://github.com/alexarchambault/ammonite-spark/actions/workflows/ci.yml?query=branch%3Amain)
+[![Build Status](https://github.com/almond-sh/almond-spark/actions/workflows/ci.yml/badge.svg)](https://github.com/almond-sh/almond-spark/actions/workflows/ci.yml?query=branch%3Amain)
 
-*ammonite-spark* allows to create SparkSessions from Ammonite. It passes some Ammonite internals to a `SparkSession`, so that spark calculations can be driven from Ammonite, as one would do from a [spark-shell](https://spark.apache.org/docs/2.3.1/quick-start.html#interactive-analysis-with-the-spark-shell).
+*almond-spark* allows to create SparkSessions from Almond. It passes some Almond internals to a `SparkSession`, so that spark calculations can be driven from Almond, as one would do from a [spark-shell](https://spark.apache.org/docs/2.3.1/quick-start.html#interactive-analysis-with-the-spark-shell).
 
 <img src="ammonite-spark.png" width="800">
 
