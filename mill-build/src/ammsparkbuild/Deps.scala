@@ -15,7 +15,7 @@ object Deps {
   def jsoniterScalaMacros =
     mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
   def log4j2       = mvn"org.apache.logging.log4j:log4j-core:2.17.2"
-  def slf4jLog4j12 = mvn"org.slf4j:slf4j-log4j12:1.7.36"
+  def slf4jLog4j12 = mvn"org.slf4j:slf4j-log4j12:2.0.20"
   def log4jCore(version: String) =
     mvn"org.apache.logging.log4j:log4j-core:$version"
   def log4jSlf4jImpl(version: String) =
