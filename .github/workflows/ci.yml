@@ -23,7 +23,7 @@ jobs:
       yarn-spark-distrib-tests: ${{ steps.list.outputs.yarn-spark-distrib-tests }}
     steps:
     - uses: actions/checkout@v7
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@v9
       with:
         disableFallback: true
     - id: list
@@ -43,7 +43,7 @@ jobs:
         cross: ${{ fromJson(needs.list-tests.outputs.local-tests) }}
     steps:
     - uses: actions/checkout@v7
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@v9
       with:
         disableFallback: true
     - run: |
@@ -59,7 +59,7 @@ jobs:
         cross: ${{ fromJson(needs.list-tests.outputs.standalone-tests) }}
     steps:
     - uses: actions/checkout@v7
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@v9
       with:
         disableFallback: true
     - run: |
@@ -75,7 +75,7 @@ jobs:
         cross: ${{ fromJson(needs.list-tests.outputs.yarn-tests) }}
     steps:
     - uses: actions/checkout@v7
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@v9
       with:
         disableFallback: true
     # the cross value is like "2.4.4-2.12.11-8" (Spark / Scala / JVM versions)
@@ -102,7 +102,7 @@ jobs:
         cross: ${{ fromJson(needs.list-tests.outputs.local-spark-distrib-tests) }}
     steps:
     - uses: actions/checkout@v7
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@v9
       with:
         disableFallback: true
     - run: |
@@ -118,7 +118,7 @@ jobs:
         cross: ${{ fromJson(needs.list-tests.outputs.yarn-spark-distrib-tests) }}
     steps:
     - uses: actions/checkout@v7
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@v9
       with:
         disableFallback: true
     - run: |
@@ -163,7 +163,7 @@ jobs:
     - uses: actions/checkout@v7
       with:
         fetch-depth: 0
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@v9
       with:
         disableFallback: true
     - uses: coursier/setup-action@v3
