@@ -55,16 +55,17 @@ final class ProgressSparkListener(
     }
   )
 
-  def newStageElem(stageId: Int, numTasks: Int, name: String, details: String): StageElem = {
-
-    if (!elems.contains(stageId))
-      elems.putIfAbsent(stageId, new StageElem(stageId, numTasks, keep, name, details, useBars))
-
-    elems.get(stageId)
-  }
+  def newStageElem(stageId: Int, numTasks: Int, name: String, details: String): StageElem =
+    elems.computeIfAbsent(
+      stageId,
+      _ => new StageElem(stageId, numTasks, keep, name, details, useBars)
+    )
 
   def stageElem(stageId: Int): StageElem =
     elems.get(stageId)
+
+  private def stageElemOpt(stageId: Int): Option[StageElem] =
+    Option(elems.get(stageId))
 
   private val updater = new ProgressBarUpdater()
 
@@ -86,23 +87,26 @@ final class ProgressSparkListener(
   override def onStageCompleted(stageCompleted: SparkListenerStageCompleted): Unit =
     if (progress)
       Try {
-        val elem = stageElem(stageCompleted.stageInfo.stageId)
-        elem.stageDone()
+        // The stage can't be cancelled any more, and its progress bar keeps a reference
+        // to it until it's done updating, so we can forget about it here
+        for (elem <- Option(elems.remove(stageCompleted.stageInfo.stageId)))
+          elem.stageDone()
       }
 
   override def onTaskStart(taskStart: SparkListenerTaskStart): Unit =
     if (progress)
       Try {
-        val elem = stageElem(taskStart.stageId)
-        elem.taskStart()
+        stageElemOpt(taskStart.stageId).foreach(_.taskStart())
       }
 
   override def onTaskEnd(taskEnd: SparkListenerTaskEnd): Unit =
     if (progress)
       Try {
-        val elem = stageElem(taskEnd.stageId)
-        elem.taskDone()
+        stageElemOpt(taskEnd.stageId).foreach(_.taskDone())
       }
+
+  override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit =
+    updater.shutdown()
 
 }
 
@@ -140,4 +144,7 @@ private[almondinternals] class ProgressBarUpdater(
     )
     polling
   }
+
+  def shutdown(): Unit =
+    pool.shutdown()
 }
