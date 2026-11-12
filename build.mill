@@ -377,7 +377,7 @@ trait AmmSparkTests extends TestModule {
   def testFramework = "utest.runner.Framework"
   def forkArgs = Task {
     super.forkArgs() ++
-      Seq("-Xmx3g", "-Dfoo=bzz") ++
+      Seq("-Xmx3g") ++
       // Spark accesses JDK internals that the module system locks down since Java 9, so
       // it needs these --add-opens to run on Java 11+ (Spark itself only started passing
       // them automatically in 3.3).
