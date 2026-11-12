@@ -230,6 +230,14 @@ trait AlmondSpark     extends CrossScalaModule with AmmSparkPublishModule
   def repositories = super.repositories() ++ Seq(
     "jitpack"
   )
+
+  object test extends ScalaTests with TestModule.Utest {
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.log4j2,
+      Deps.sparkSql(scalaVersion()),
+      Deps.utest
+    )
+  }
 }
 
 object `almond-toree-spark` extends Cross[AlmondToreeSpark](Versions.scala)
