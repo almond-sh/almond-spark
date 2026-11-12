@@ -76,6 +76,23 @@ You can then run Spark calculations, like
 @ val n = rdd.map(_ + 1).sum()
 ```
 
+## `AmmoniteSparkSession` vs `SparkSession`
+
+The builder created via `AmmoniteSparkSession.builder()` extends the one from `SparkSession.builder()`. On top of what the latter does, it:
+
+- if master is set to `yarn`, loads `spark-yarn` in the Ammonite session, sets `"spark.yarn.jars"` in the Spark conf, and tries to add the YARN conf to the classpath if it's not already there (it successively looks at `HADOOP_CONF_DIR` and `YARN_CONF_DIR` in the environment, and in `/etc/hadoop/conf`)
+- if `"spark.sql.catalogImplementation"` is set to `"hive"` in the SparkConf, loads `spark-hive` in the Ammonite session, and tries to add the Hive conf to the classpath if it's not already there (looking at `HIVE_CONF_DIR` in the environment)
+- adds the JARs loaded in the session to `"spark.jars"` in the SparkConf (excluding those that come from Spark modules, or are pulled transitively by them)
+- starts a small web server that exposes the classes resulting from compiling the code entered at the Ammonite prompt, and passes its address to Spark via `"spark.repl.class.uri"` in the SparkConf
+
+One can also call `.progressBars()` on the builder, to force Spark to display progress bars in the console.
+
+See [INTERNALS](INTERNALS.md) for more details about how the driver and executor classpaths are computed.
+
+### Syncing dependencies
+
+Since ammonite-spark `0.14.0-RC1`, dependencies loaded via ``import $ivy.`…` `` after the `SparkSession` has been created are passed to the Spark executors automatically. With earlier versions, one had to call `AmmoniteSparkSession.sync()` after loading them. This method is now deprecated, and not needed any more.
+
 ## Using with standalone cluster
 
 Simply set the master to `spark://…` when building the session, e.g.
