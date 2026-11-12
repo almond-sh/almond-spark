@@ -1,11 +1,10 @@
 package org.apache.spark.sql.almondinternals
 
-import java.io.{BufferedReader, File, FileReader}
+import java.io.File
 import java.nio.file.{Files, StandardOpenOption}
 
 import almond.interpreter.api.{CommHandler, CommTarget, DisplayData, OutputHandler}
 
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.control.NonFatal
 import java.nio.charset.StandardCharsets
@@ -45,8 +44,10 @@ final class SendLog(
       val res =
         try Some(f)
         catch {
-          case NonFatal(_) =>
-            // FIXME Log the exception that somewhere?
+          case NonFatal(e) =>
+            System.err.println(
+              s"Warning: error while sending logs ($e), retrying in ${delay.toSeconds} s"
+            )
             None
         }
 
@@ -77,8 +78,6 @@ final class SendLog(
             p
         }
 
-        var r: FileReader = null
-
         val msg = writeToArray(SendLog.Open(fileName0, prefix))
 
         try {
@@ -91,41 +90,20 @@ final class SendLog(
             )
           }
 
-          // https://stackoverflow.com/questions/557844/java-io-implementation-of-unix-linux-tail-f/558262#558262
-
           while (!gotAck)
             Thread.sleep(delay.toMillis)
 
-          r = new FileReader(f)
-          val br = new BufferedReader(r)
-
-          var lines = new ListBuffer[String]
-          while (keepReading) {
-            val line = br.readLine()
-            if (line == null)
-              // wait until there is more in the file
-              Thread.sleep(delay.toMillis)
-            else {
-              lines += line
-
-              while (keepReading && lines.length <= lineBufferSize && br.ready())
-                lines += br.readLine()
-
-              val l = lines.result()
-              val l0 =
-                if (replaceHome) {
-                  val home = sys.props("user.home")
-                  l.map(_.replace(home, "~"))
-                }
-                else
-                  l
-              // Beware: nospaces has a bad complexity (super slow when generating a large output)
-              val res = writeToArray(SendLog.Data(l0))
-              lines.clear()
-
-              withExponentialBackOff {
-                commHandler.commMessage(commId, res, SendLog.emptyObj)
+          TailFile(f, () => keepReading, delay, lineBufferSize) { lines =>
+            val lines0 =
+              if (replaceHome) {
+                val home = sys.props("user.home")
+                lines.map(_.replace(home, "~"))
               }
+              else
+                lines
+            val res = writeToArray(SendLog.Data(lines0))
+            withExponentialBackOff {
+              commHandler.commMessage(commId, res, SendLog.emptyObj)
             }
           }
         }
@@ -133,12 +111,9 @@ final class SendLog(
           case _: InterruptedException =>
           // normal exit
         }
-        finally {
-          if (r != null)
-            r.close()
+        finally
           // no re-attempt here…
           commHandler.commClose(commId, SendLog.emptyObj, SendLog.emptyObj)
-        }
       }
     }
 
