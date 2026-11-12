@@ -41,16 +41,7 @@ object SparkDependencies {
     }
 
   def sparkHiveFound(): Boolean =
-    sparkHiveClasses.exists { className =>
-      try {
-        Thread.currentThread().getContextClassLoader.loadClass(className)
-        true
-      }
-      catch {
-        case _: ClassNotFoundException =>
-          false
-      }
-    }
+    sparkHiveClasses.exists(classFound)
 
   def sparkYarnFound(): Boolean =
     classFound(sparkYarnClass)
@@ -89,7 +80,7 @@ object SparkDependencies {
 
     addIfClass("yarn", sparkYarnClass)
     addIfClasses("hive", sparkHiveClasses)
-    addIfClass("mllib", "org.apache.spark.mllib.optimization")
+    addIfClass("mllib", "org.apache.spark.mllib.optimization.GradientDescent")
     addIfClass("graphx", "org.apache.spark.graphx.Graph")
     addIfClass("streaming", "org.apache.spark.streaming.StreamingContext")
 
@@ -99,9 +90,11 @@ object SparkDependencies {
   def stubsDependency = {
     val sv = org.apache.spark.SPARK_VERSION
     val suffix = sv.split('.').take(2) match {
+      case Array("0" | "1", _) =>
+        sys.error(s"Spark $sv is not supported (Spark >= 2.4 required)")
       case Array("2", n) if Try(n.toInt).toOption.exists(_ <= 3) =>
-        "20"
-      case Array("2", n) if Try(n.toInt).toOption.exists(_ >= 4) =>
+        sys.error(s"Spark $sv is not supported (Spark >= 2.4 required)")
+      case Array("2", _) =>
         "24"
       case Array("3", n) if Try(n.toInt).toOption.exists(_ <= 1) =>
         "30"
