@@ -4,9 +4,9 @@ Run [spark](https://spark.apache.org/) calculations from [Almond](https://github
 
 [![Build Status](https://github.com/almond-sh/almond-spark/actions/workflows/ci.yml/badge.svg)](https://github.com/almond-sh/almond-spark/actions/workflows/ci.yml?query=branch%3Amain)
 
-*almond-spark* allows to create SparkSessions from Almond. It passes some Almond internals to a `SparkSession`, so that spark calculations can be driven from Almond, as one would do from a [spark-shell](https://spark.apache.org/docs/2.3.1/quick-start.html#interactive-analysis-with-the-spark-shell).
+*almond-spark* allows to create SparkSessions from Almond. It passes some Almond internals to a `SparkSession`, so that spark calculations can be driven from Almond, as one would do from a [spark-shell](https://spark.apache.org/docs/latest/quick-start.html#interactive-analysis-with-the-spark-shell).
 
-The README below is more about the integration with [Ammonite](https://github.com/lihaoyi/Ammonite) ([Almond fork](https://github.com/almond-sh/Ammonite)). See the [Almond documentation](https://almond.sh/docs/usage-spark) for the integration in Almond itself.
+The README below is more about the integration with [Ammonite](https://github.com/com-lihaoyi/Ammonite) ([Almond fork](https://github.com/almond-sh/Ammonite)). See the [Almond documentation](https://almond.sh/docs/usage-spark) for the integration in Almond itself.
 
 <img src="ammonite-spark.png" width="800">
 
@@ -24,8 +24,8 @@ The README below is more about the integration with [Ammonite](https://github.co
 
 ## Quick start
 
-Start Ammonite >= [`1.6.3`](https://github.com/lihaoyi/Ammonite/releases/download/1.6.3/2.11-1.6.3), with the `--class-based` option.
-The `--tmp-output-directory` option, available since Ammonite `3.0.0-M0-14-c12b6a59` is also recommended, especially in "tight" network environments (Kubernetes, …). The [compatibility section](#compatibility) lists the compatible versions of Ammonite and ammonite-spark. Start Ammonite by either following [the Ammonite instructions](http://ammonite.io/#Ammonite-REPL) on its website, then do
+Start Ammonite >= [`1.6.3`](https://github.com/com-lihaoyi/Ammonite/releases/download/1.6.3/2.11-1.6.3), with the `--class-based` option.
+The `--tmp-output-directory` option, available since Ammonite `3.0.0-M0-14-c12b6a59` is also recommended, especially in "tight" network environments (Kubernetes, …). The [compatibility section](#compatibility) lists the compatible versions of Ammonite and ammonite-spark. Start Ammonite by either following [the Ammonite instructions](https://ammonite.io/#Ammonite-REPL) on its website, then do
 ```
 $ amm --class-based --tmp-output-directory
 ```
@@ -63,7 +63,7 @@ The builder returned by `AmmoniteSparkSession.builder()` extends the one of `Spa
 
 See below for how to use it with [standalone clusters](#using-with-standalone-cluster), and how to use it with [YARN clusters](#using-with-yarn-cluster).
 
-Note that *ammonite-spark* does *not* rely on a Spark distribution. The driver and executors classpaths are handled from the Ammonite session only, via ``import $ivy.`…` `` statements. See [INTERNALS](https://github.com/alexarchambault/ammonite-spark/blob/develop/INTERNALS.md) for more details.
+Note that *ammonite-spark* does *not* rely on a Spark distribution. The driver and executors classpaths are handled from the Ammonite session only, via ``import $ivy.`…` `` statements. See [INTERNALS](INTERNALS.md) for more details.
 
 You can then run Spark calculations, like
 ```scala
