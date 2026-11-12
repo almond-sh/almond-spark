@@ -24,8 +24,8 @@ The README below is more about the integration with [Ammonite](https://github.co
 
 ## Quick start
 
-Start Ammonite >= [`1.6.3`](https://github.com/com-lihaoyi/Ammonite/releases/download/1.6.3/2.11-1.6.3), with the `--class-based` option.
-The `--tmp-output-directory` option, available since Ammonite `3.0.0-M0-14-c12b6a59` is also recommended, especially in "tight" network environments (Kubernetes, …). The [compatibility section](#compatibility) lists the compatible versions of Ammonite and ammonite-spark. Start Ammonite by either following [the Ammonite instructions](https://ammonite.io/#Ammonite-REPL) on its website, then do
+Start Ammonite with the `--class-based` option, using Scala 2.12 or 2.13 (the only Scala versions supported for now).
+The `--tmp-output-directory` option, available since Ammonite `3.0.0-M0-14-c12b6a59`, is also recommended, especially in "tight" network environments (Kubernetes, …). The [compatibility section](#compatibility) lists the compatible versions of Ammonite and ammonite-spark. Start Ammonite by either following [the Ammonite instructions](https://ammonite.io/#Ammonite-REPL) on its website, then do
 ```
 $ amm --class-based --tmp-output-directory
 ```
@@ -37,14 +37,16 @@ or [Scala CLI](https://github.com/VirtusLab/scala-cli)
 ```
 $ scala-cli repl --amm --ammonite-version 3.0.0-M0-60-89836cd8 --scala 2.13.12 -- --class-based --tmp-output-directory
 ```
-Ensure you are using scala 2.12 or 2.13, the only supported Scala versions as of writing this.
 
 At the Ammonite prompt, load the Spark 2.x or 3.x version of your choice, along with ammonite-spark,
 ```scala
-@ import $ivy.`org.apache.spark::spark-sql:3.3.0`
-@ import $ivy.`sh.almond::ammonite-spark:0.13.12`
+@ import $ivy.`org.apache.spark::spark-sql:3.5.8`
+@ import $ivy.`sh.almond::ammonite-spark:0.14.0-RC8`
 ```
 (Note the two `::` before `spark-sql` or `ammonite-spark`, as these are scala dependencies.)
+
+When run from Ammonite, Spark 3.x fails on Java 17 or later unless extra `--add-opens` JVM options are passed (spark-submit adds them itself), so prefer Java 8 or 11 with it (e.g. `cs launch --jvm 11 ammonite:…`). Spark 2.4 requires Scala 2.12.
+Support for Spark 4.x (Scala 2.13 and Java 17 only) is in the main branch, but not in a release yet.
 
 Then create a `SparkSession` using the builder provided by *ammonite-spark*
 ```scala
