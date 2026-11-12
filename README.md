@@ -4,21 +4,30 @@ Run [spark](https://spark.apache.org/) calculations from [Almond](https://github
 
 [![Build Status](https://github.com/almond-sh/almond-spark/actions/workflows/ci.yml/badge.svg)](https://github.com/almond-sh/almond-spark/actions/workflows/ci.yml?query=branch%3Amain)
 
-*almond-spark* allows to create SparkSessions from Almond. It passes some Almond internals to a `SparkSession`, so that spark calculations can be driven from Almond, as one would do from a [spark-shell](https://spark.apache.org/docs/latest/quick-start.html#interactive-analysis-with-the-spark-shell).
+*almond-spark* lets you create `SparkSession`s from [Almond](https://almond.sh) or [Ammonite](https://github.com/com-lihaoyi/Ammonite). It passes some of their internals to a `SparkSession`, so that Spark calculations can be driven from a notebook or a REPL, as one would do from a [spark-shell](https://spark.apache.org/docs/latest/quick-start.html#interactive-analysis-with-the-spark-shell).
 
-The README below is more about the integration with [Ammonite](https://github.com/com-lihaoyi/Ammonite) ([Almond fork](https://github.com/almond-sh/Ammonite)). See the [Almond documentation](https://almond.sh/docs/usage-spark) for the integration in Almond itself.
+It is published as several modules, under the `sh.almond` organization:
+
+| Module | Use from | Entry point |
+|--------|----------|-------------|
+| `ammonite-spark` | [Ammonite](https://github.com/com-lihaoyi/Ammonite) (or the [Almond fork](https://github.com/almond-sh/Ammonite)) | `AmmoniteSparkSession.builder()` |
+| `almond-spark` | [Almond](https://github.com/almond-sh/almond) notebooks | `NotebookSparkSession.builder()` |
+| `almond-toree-spark` | Almond, with its [Toree](https://toree.apache.org) compatibility mode | `%%sql` / `%%sparksql` cell magics |
+
+The rest of this README is mostly written for Ammonite, but applies to Almond too. See [Using from Almond](#using-from-almond) for the differences.
 
 <img src="ammonite-spark.png" width="800">
 
-## Table of content
+## Table of contents
 
 1. [Quick start](#quick-start)
 2. [`AmmoniteSparkSession` vs `SparkSession`](#ammonitesparksession-vs-sparksession)
    1. [Syncing dependencies](#syncing-dependencies)
-3. [Using with standalone cluster](#using-with-standalone-cluster)
-4. [Using with YARN cluster](#using-with-yarn-cluster)
-5. [Troubleshooting](#troubleshooting)
-6. [Compatibility](#compatibility)
+3. [Using from Almond](#using-from-almond)
+4. [Using with standalone cluster](#using-with-standalone-cluster)
+5. [Using with YARN cluster](#using-with-yarn-cluster)
+6. [Troubleshooting](#troubleshooting)
+7. [Compatibility](#compatibility)
 
 
 
@@ -92,6 +101,23 @@ See [INTERNALS](INTERNALS.md) for more details about how the driver and executor
 ### Syncing dependencies
 
 Since ammonite-spark `0.14.0-RC1`, dependencies loaded via ``import $ivy.`…` `` after the `SparkSession` has been created are passed to the Spark executors automatically. With earlier versions, one had to call `AmmoniteSparkSession.sync()` after loading them. This method is now deprecated, and not needed any more.
+
+## Using from Almond
+
+From an [Almond](https://almond.sh) notebook, load `almond-spark` rather than `ammonite-spark`, and use `NotebookSparkSession` rather than `AmmoniteSparkSession`:
+```scala
+import $ivy.`org.apache.spark::spark-sql:3.5.8`
+import $ivy.`sh.almond::almond-spark:0.14.0-RC8`
+
+import org.apache.spark.sql._
+
+val spark = NotebookSparkSession.builder()
+  .master("local[*]")
+  .getOrCreate()
+```
+
+The builder returned by `NotebookSparkSession.builder()` extends the one of `AmmoniteSparkSession.builder()`, and also displays Spark progress bars and links to the Spark UI in the notebook. Everything else in this README (cluster managers, troubleshooting, …) applies to it too.
+Pick the almond-spark version matching your Almond version (see the [compatibility table](#compatibility)), and see the [Almond documentation](https://almond.sh/docs/usage-spark) for more details.
 
 ## Using with standalone cluster
 
