@@ -152,6 +152,21 @@ with for sure.
 | `0.12.0`          | `2.3.8-122-9be39deb`  | skipped |
 | `0.13.0`          | `2.5.4-8-30448e49` | `0.13.0` |
 | `0.13.1`          | `2.5.4-13-1ebd00a6` | `0.13.1` |
-| `0.13.2`          | `2.5.4-14-dc4c47bc` | `0.13.2` |
-| ...               | ...                 | ...      |
-[ `0.13.9`          | `3.0.0-M0-17-e7a04255` | `0.13.11` |
+| `0.13.2`          | `2.5.4-14-dc4c47bc` | |
+| `0.13.3`          | `2.5.4-26-9cd15abe` | |
+| `0.13.4`          | `2.5.5-11-626c15b0` | |
+| `0.13.5`          | `2.5.5-17-df243e14` | `0.13.2`, `0.13.3` |
+| `0.13.6`          | `2.5.6` | `0.13.4`, `0.13.5` |
+| `0.13.7`          | `3.0.0-M0-14-c12b6a59` | `0.13.6`, `0.13.7` |
+| `0.13.8`          | `3.0.0-M0-17-e7a04255` | `0.13.8` |
+| `0.13.9`          | `3.0.0-M0-17-e7a04255` | `0.13.9` to `0.13.14` |
+| `0.13.10`, `0.13.11` | `3.0.0-M0-23-f664d7ef` | |
+| `0.13.12`         | `3.0.0-M0-23-f664d7ef` | `0.14.0-RC1` to `0.14.0-RC3` |
+| `0.14.0-RC8`      | `3.0.0-M0-41-26a93d9c` (\*) | `0.14.0` to `0.14.1-11` |
+
+(\*) Built against a temporary Almond fork of Ammonite (`sh.almond.tmp.ammonite`) rather than
+`com.lihaoyi` artifacts. It is known to work with upstream Ammonite `3.0.0-M0-60-89836cd8`, as
+used in the [quick start](#quick-start).
+
+The almond column lists the almond versions that depend on each ammonite-spark version.
+See the [releases page](https://github.com/almond-sh/almond-spark/releases) for all versions.
