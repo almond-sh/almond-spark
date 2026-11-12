@@ -163,11 +163,11 @@ import spark.implicits._
 @ org.apache.spark.sql.catalyst.encoders.OuterScopes.addOuterScope(this); case class Foo(id: String, value: Int)
 defined class Foo
 
-@  val ds = List(Foo("Alice", 42), Foo("Bob", 43)).toDS
+@ val ds = List(Foo("Alice", 42), Foo("Bob", 43)).toDS
 ds: Dataset[Foo] = [id: string, value: int]
 ```
 
-(This should likely be added automatically in the future.)
+This shouldn't be needed with recent versions: the example above works without it with ammonite-spark `0.14.0-RC8`, Spark `3.5.8` and Scala 2.13.
 
 ## Compatibility
 
