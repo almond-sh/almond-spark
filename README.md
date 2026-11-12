@@ -28,6 +28,7 @@ The rest of this README is mostly written for Ammonite, but applies to Almond to
 5. [Using with YARN cluster](#using-with-yarn-cluster)
 6. [Troubleshooting](#troubleshooting)
 7. [Compatibility](#compatibility)
+8. [Contributing](#contributing)
 
 
 
@@ -215,3 +216,20 @@ used in the [quick start](#quick-start).
 
 The almond column lists the almond versions that depend on each ammonite-spark version.
 See the [releases page](https://github.com/almond-sh/almond-spark/releases) for all versions.
+
+## Contributing
+
+almond-spark is built with [Mill](https://mill-build.org). Compile all modules with
+```
+$ ./mill __.compile
+```
+and publish them locally (to `~/.ivy2/local`), to try them from Ammonite or Almond, with
+```
+$ ./mill __.publishLocal
+```
+See [TESTS.md](TESTS.md) for how to run the tests, locally or against standalone and YARN clusters,
+and [INTERNALS.md](INTERNALS.md) for how the driver and executor classpaths are handled.
+
+## License
+
+almond-spark is released under the [MIT license](LICENSE).
