@@ -8,12 +8,11 @@ import almond.interpreter.api.{CommHandler, OutputHandler}
 import almond.display.Display.html
 import ammonite.interp.api.InterpAPI
 import ammonite.repl.api.ReplAPI
-import org.apache.log4j.{Category, Logger, RollingFileAppender}
 import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.ammonitesparkinternals.AmmoniteSparkSessionBuilder
 
-import scala.collection.JavaConverters._
+import scala.util.Try
 import scala.util.control.NonFatal
 
 class NotebookSparkSessionBuilder(implicit
@@ -68,13 +67,7 @@ class NotebookSparkSessionBuilder(implicit
 
   override def getOrCreate(): SparkSession = {
 
-    def defaultLogFileOpt = {
-      val ver = org.apache.spark.SPARK_VERSION
-      if (ver.startsWith("1.") || ver.startsWith("2."))
-        Log4jFile.logFile(classOf[SparkSession])
-      else
-        Log4j2File.logFile(classOf[SparkSession])
-    }
+    lazy val defaultLogFileOpt = NotebookSparkSessionBuilder.logFile(classOf[SparkSession])
 
     val logFileOpt = logsInDeveloperConsoleOpt match {
       case Some(false) =>
@@ -145,4 +138,34 @@ class NotebookSparkSessionBuilder(implicit
     }
   }
 
+}
+
+object NotebookSparkSessionBuilder {
+
+  /** Whether the current Spark version relies on log4j 1.x (rather than log4j 2)
+    *
+    * Spark switched from log4j 1.x to log4j 2 in Spark 3.3.
+    */
+  private def usesLog4j1: Boolean = {
+    val majorMinor = org.apache.spark.SPARK_VERSION
+      .split('.')
+      .take(2)
+      .map(s => Try(s.takeWhile(_.isDigit).toInt).getOrElse(0))
+    majorMinor match {
+      case Array(major, minor) => major < 3 || (major == 3 && minor < 3)
+      case Array(major)        => major < 3
+      case _                   => false
+    }
+  }
+
+  /** Finds the file Spark logs are written to, if any */
+  private[almondinternals] def logFile(clazz: Class[_]): Option[File] =
+    try
+      if (usesLog4j1) Log4jFile.logFile(clazz)
+      else Log4j2File.logFile(clazz)
+    catch {
+      // NoClassDefFoundError and the like, if the expected log4j version isn't around
+      case _: LinkageError => None
+      case NonFatal(_)     => None
+    }
 }
