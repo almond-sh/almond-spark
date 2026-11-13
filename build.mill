@@ -11,7 +11,6 @@ import mill.*
 import mill.api.*
 import mill.javalib.api.JvmWorkerUtil
 import mill.scalalib.*
-import mill.util.VcsVersion
 
 import java.util.Arrays
 
@@ -37,20 +36,23 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
 
 trait AmmSparkPublishModule extends PublishModule {
   import mill.scalalib.publish.*
-  def publishVersion =
-    sys.env.get("AMMONITE_SPARK_FORCED_VERSION") match {
-      case Some(forcedVersion) => Task(forcedVersion)
-      case None =>
-        Task {
-          val v        = VcsVersion.vcsState().format()
-          val dirtyIdx = v.indexOf("-DIRTY")
-          def endsWithCommitHash = v.length > 6 &&
-            v.substring(v.length - 6).forall(c => c.isDigit || (c >= 'a' && c <= 'f'))
-          if (dirtyIdx >= 0) v.take(dirtyIdx) + "-SNAPSHOT"
-          else if (endsWithCommitHash) v + "-SNAPSHOT"
-          else v
-        }
-    }
+  def publishVersion = Task.Input {
+    Task.env.getOrElse(
+      "AMMONITE_SPARK_FORCED_VERSION",
+      BuildVersion.compute(BuildCtx.workspaceRoot)
+    )
+  }
+  // Publish almost empty javadoc JARs (Maven Central requires one per module, but
+  // doesn't check their content), rather than spend time generating Scaladoc
+  def docJar = Task {
+    val dest = Task.dest / "empty.jar"
+    val baos = new java.io.ByteArrayOutputStream
+    val zos  = new java.util.zip.ZipOutputStream(baos)
+    zos.finish()
+    zos.close()
+    os.write(dest, baos.toByteArray)
+    PathRef(dest)
+  }
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "sh.almond",
