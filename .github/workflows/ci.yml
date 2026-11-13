@@ -194,7 +194,7 @@ jobs:
         MILL_CHECKS_ORPHAN_SOURCES_IGNORE: >-
           mill-build
     - name: Ensure computing non-final sources doesn't trigger compilation
-      run: ./mill --import io.github.alexarchambault.mill::mill-checks:0.1.2 io.github.alexarchambault.millchecks.MillChecks/bspChecks
+      run: ./mill --no-daemon --import io.github.alexarchambault.mill::mill-checks:0.1.2 io.github.alexarchambault.millchecks.MillChecks/bspChecks
     # On pull requests, only check the modules affected by the PR, via Mill selective execution
     - name: Binary compatibility checks
       run: |
