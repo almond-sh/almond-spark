@@ -3,7 +3,6 @@ package ammsparkbuild
 import mill.scalalib.*
 
 object Deps {
-  def almondToreeHooks = mvn"sh.almond::toree-hooks:${Versions.almond}"
   def ammoniteCompiler = mvn"sh.almond.ammonite:::ammonite-compiler:${Versions.ammonite}"
   def ammoniteReplApi  = mvn"sh.almond.ammonite:::ammonite-repl-api:${Versions.ammonite}"
   def ammoniteRepl     = mvn"sh.almond.ammonite:::ammonite-repl:${Versions.ammonite}"
@@ -22,7 +21,7 @@ object Deps {
   def log4jSlf4j2Impl(version: String) =
     mvn"org.apache.logging.log4j:log4j-slf4j2-impl:$version"
   def slf4jApi(version: String) = mvn"org.slf4j:slf4j-api:$version"
-  def scalaKernelApi            = mvn"sh.almond:::scala-kernel-api:${Versions.almond}"
+  def scalaKernelApi            = mvn"sh.almond::scala-kernel-api:${Versions.almond}"
   def scalatags                 = mvn"com.lihaoyi::scalatags:0.13.1"
   def sparkSql(sv: String) = {
     val ver =
