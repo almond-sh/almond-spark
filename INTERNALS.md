@@ -13,14 +13,4 @@ The code entered by the user during the session is compiled and results in extra
 
 ## `AmmoniteSparkSession` vs `SparkSession`
 
-The builder created via `AmmoniteSparkSession.builder()` extends the one from `SparkSession.builder()`. It does a number of things more compared to it.
-
-- if master is set to `yarn`, it loads `spark-yarn` in the Ammonite session, sets `"spark.yarn.jars"` in the Spark conf, and tries to add the YARN conf to the classpath if it's not already there (it successively looks at `HADOOP_CONF_DIR` and `YARN_CONF_DIR` in the environment, and in `/etc/hadoop/conf`)
-
-- if `"spark.sql.catalogImplementation"` is set to `"hive"` in the SparkConf, it loads `spark-hive` in the Ammonite session, and tries to add the Hive conf to the classpath if it's not already there (looking at `HIVE_CONF_DIR` in the environment)
-
-- it adds the JARs loaded in the session to `"spark.jars"` in the SparkConf (excluding those that come from Spark modules, or are pulled transitively by them)
-
-- it starts a small web server that exposes the classes resulting from compiling the code entered at the Ammonite prompt, and passes its address to Spark via `"spark.repl.class.uri"` in the SparkConf.
-
-- one can call `.progressBars()` on the builder to force Spark to display progress bars in the console
+See the [README](README.md#ammonitesparksession-vs-sparksession) for what `AmmoniteSparkSession.builder()` does on top of `SparkSession.builder()`.

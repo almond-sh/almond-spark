@@ -54,9 +54,9 @@ trait AmmSparkPublishModule extends PublishModule {
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "sh.almond",
-    url = "https://github.com/alexarchambault/ammonite-spark.git",
+    url = "https://github.com/almond-sh/almond-spark",
     licenses = Seq(License.MIT),
-    versionControl = VersionControl.github("alexarchambault", "ammonite-spark"),
+    versionControl = VersionControl.github("almond-sh", "almond-spark"),
     developers = Seq(
       Developer("alexarchambault", "Alex Archambault", "https://github.com/alexarchambault")
     )
