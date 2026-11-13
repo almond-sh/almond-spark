@@ -35,7 +35,7 @@ class NotebookSparkSessionBuilder(implicit
 
   private var progress0 = true
   private var keep0     = false
-  private var useBars0  = false
+  private var useBars0  = true
 
   private var logsInDeveloperConsoleOpt = Option.empty[Boolean]
   private var logsInKernelOutputOpt     = Option.empty[Boolean]
@@ -44,10 +44,20 @@ class NotebookSparkSessionBuilder(implicit
     Option(System.getenv("ALMOND_SPARK_LOGS_IN_KERNEL_OUTPUT"))
       .exists(v => v == "1" || v == "true")
 
+  /** Configures the progress of Spark stages shown in cell outputs
+    *
+    * @param enable
+    *   whether to show the progress of Spark stages
+    * @param keep
+    *   whether to keep it once stages are done (it's wiped a few seconds after they complete
+    *   otherwise)
+    * @param useBars
+    *   whether to show progress bars, or only text with the percentage of completed tasks
+    */
   def progress(
     enable: Boolean = true,
     keep: Boolean = false,
-    useBars: Boolean = false
+    useBars: Boolean = true
   ): this.type = {
     progress0 = enable
     keep0 = keep
