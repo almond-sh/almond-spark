@@ -13,6 +13,10 @@ jobs:
   # Values are listed in a readable form ("2.4.4-2.12.11-8" rather than the Mill
   # segment "2_4_4__2_12_11__8"), so that the matrix jobs have readable names -
   # the jobs below convert them back before passing them to Mill.
+  # On pull requests, only the values whose tests are affected by the PR are listed,
+  # thanks to Mill selective execution: we run 'selective.prepare' on the base
+  # branch, then 'selective.resolve' on the PR (merge) commit. Mill doesn't know
+  # about the CI files and the YARN Docker script, so all tests are run when those change.
   list-tests:
     runs-on: ubuntu-latest
     outputs:
@@ -23,19 +27,48 @@ jobs:
       yarn-spark-distrib-tests: ${{ steps.list.outputs.yarn-spark-distrib-tests }}
     steps:
     - uses: actions/checkout@v7
+      with:
+        # for pull requests, HEAD is a merge commit whose first parent is the base branch
+        fetch-depth: 2
     - uses: coursier/cache-action@v9
       with:
         disableFallback: true
     - id: list
       run: |
-        for module in local-tests standalone-tests yarn-tests local-spark-distrib-tests yarn-spark-distrib-tests; do
-          values="$(./mill resolve "$module[_]" | sed "s/^$module\.//; s/__/-/g; s/_/./g" | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+        MODULES="local-tests standalone-tests yarn-tests local-spark-distrib-tests yarn-spark-distrib-tests"
+        SELECTOR="{$(echo $MODULES | tr ' ' ',')}[_].testForked"
+        HEAD_SHA="$(git rev-parse HEAD)"
+        SELECTIVE=false
+        if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+          SELECTIVE=true
+          CHANGED="$(git diff --name-only HEAD^1 HEAD)"
+          echo "Files changed by this pull request:"
+          echo "$CHANGED"
+          if echo "$CHANGED" | grep -qE '^(\.github/|mill-in-docker-with-yarn-cluster\.sh$)'; then
+            echo "CI files changed, running all tests"
+            SELECTIVE=false
+          elif ! { git checkout -q HEAD^1 && ./mill selective.prepare "$SELECTOR"; }; then
+            echo "Could not run selective.prepare on the base branch, running all tests"
+            SELECTIVE=false
+          fi
+          git checkout -q "$HEAD_SHA"
+        fi
+        if [ "$SELECTIVE" = true ]; then
+          TASKS="$(./mill selective.resolve "$SELECTOR")"
+        else
+          TASKS="$(./mill resolve "$SELECTOR")"
+        fi
+        echo "Tests to run:"
+        echo "$TASKS"
+        for module in $MODULES; do
+          values="$(echo "$TASKS" | sed -n "s/^$module\.\(.*\)\.testForked$/\1/p" | sed "s/__/-/g; s/_/./g" | jq -R -s -c 'split("\n") | map(select(length > 0))')"
           echo "$module: $values"
           echo "$module=$values" >> "$GITHUB_OUTPUT"
         done
 
   local-tests:
     needs: list-tests
+    if: needs.list-tests.outputs.local-tests != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -52,6 +85,7 @@ jobs:
 
   standalone-tests:
     needs: list-tests
+    if: needs.list-tests.outputs.standalone-tests != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -68,6 +102,7 @@ jobs:
 
   yarn-tests:
     needs: list-tests
+    if: needs.list-tests.outputs.yarn-tests != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -95,6 +130,7 @@ jobs:
 
   local-distrib-tests:
     needs: list-tests
+    if: needs.list-tests.outputs.local-spark-distrib-tests != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -111,6 +147,7 @@ jobs:
 
   yarn-distrib-tests:
     needs: list-tests
+    if: needs.list-tests.outputs.yarn-spark-distrib-tests != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -145,8 +182,17 @@ jobs:
           mill-build
     - name: Ensure computing non-final sources doesn't trigger compilation
       run: ./mill --import io.github.alexarchambault.mill::mill-checks:0.1.2 io.github.alexarchambault.millchecks.MillChecks/bspChecks
+    # On pull requests, only check the modules affected by the PR, via Mill selective execution
     - name: Binary compatibility checks
-      run: ./mill __.mimaReportBinaryIssues
+      run: |
+        HEAD_SHA="$(git rev-parse HEAD)"
+        if [ "$GITHUB_EVENT_NAME" = pull_request ] && git checkout -q HEAD^1 && ./mill selective.prepare __.mimaReportBinaryIssues; then
+          git checkout -q "$HEAD_SHA"
+          ./mill selective.run __.mimaReportBinaryIssues
+        else
+          git checkout -q "$HEAD_SHA"
+          ./mill __.mimaReportBinaryIssues
+        fi
 
   format:
     timeout-minutes: 15
