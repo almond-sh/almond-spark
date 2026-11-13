@@ -1,4 +1,4 @@
-//| mill-version: 1.1.10
+//| mill-version: 1.4.0-M2
 //| mill-jvm-version: 17
 
 package build
@@ -339,7 +339,7 @@ trait StandaloneClusterModule extends StandaloneCluster with Cross.Module[SparkD
   def javaHome = Task {
     val fileCache = coursier.cache.FileCache()
     val jvmCache = coursier.jvm.JvmCache()
-      .withArchiveCache(coursier.cache.ArchiveCache().withCache(fileCache))
+      .copy(archiveCache = coursier.cache.ArchiveCache().copy(cache = fileCache))
       .withDefaultIndex
     val javaHome = coursier.jvm.JavaHome().withCache(jvmCache)
     val home     = javaHome.get(jvmId).unsafeRun()(using fileCache.ec)
