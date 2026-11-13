@@ -181,8 +181,7 @@ trait Core  extends CrossScalaModule with WithPropertyFile with AmmSparkPublishM
     Deps.sparkSql(scalaVersion())
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.classPathUtil,
-    Deps.jettyServer
+    Deps.classPathUtil
   )
   def propertyFilePath =
     os.sub / "org/apache/spark/sql/ammonitesparkinternals/ammonite-spark.properties"
@@ -198,6 +197,14 @@ trait Core  extends CrossScalaModule with WithPropertyFile with AmmSparkPublishM
       .map(_.trim)
       .filter(_.startsWith("v"))
       .map(_.stripPrefix("v"))
+  }
+
+  object test extends ScalaTests with TestModule.Utest {
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.ammoniteReplApi,
+      Deps.sparkSql(scalaVersion()),
+      Deps.utest
+    )
   }
 }
 
@@ -223,6 +230,14 @@ trait AlmondSpark     extends CrossScalaModule with AmmSparkPublishModule
   def repositories = super.repositories() ++ Seq(
     "jitpack"
   )
+
+  object test extends ScalaTests with TestModule.Utest {
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.log4j2,
+      Deps.sparkSql(scalaVersion()),
+      Deps.utest
+    )
+  }
 }
 
 object `almond-toree-spark` extends Cross[AlmondToreeSpark](Versions.scala)
@@ -242,6 +257,12 @@ trait AlmondToreeSpark extends CrossScalaModule with AmmSparkPublishModule with 
   def repositories = super.repositories() ++ Seq(
     "jitpack"
   )
+
+  object test extends ScalaTests with TestModule.Utest {
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.utest
+    )
+  }
 }
 
 // Gather the publishLocalTestRepo of every module into a single local Maven
@@ -356,7 +377,7 @@ trait AmmSparkTests extends TestModule {
   def testFramework = "utest.runner.Framework"
   def forkArgs = Task {
     super.forkArgs() ++
-      Seq("-Xmx3g", "-Dfoo=bzz") ++
+      Seq("-Xmx3g") ++
       // Spark accesses JDK internals that the module system locks down since Java 9, so
       // it needs these --add-opens to run on Java 11+ (Spark itself only started passing
       // them automatically in 3.3).

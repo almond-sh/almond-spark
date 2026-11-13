@@ -120,17 +120,18 @@ object AmmoniteSparkSessionBuilder {
       noop
   }
 
-  private def expandClassPathEntry(entry: String): Seq[os.Path] =
-    if (entry.endsWith("/*")) {
-      val path = os.Path(entry.stripSuffix("/*"), os.pwd)
-      if (os.isDir(path)) os.list(path)
-      else Nil
-    }
-    else if (entry.endsWith("/*.jar")) {
-      val path = os.Path(entry.stripSuffix("/*"), os.pwd)
-      if (os.isDir(path)) os.list(path).filter(_.last.endsWith(".jar"))
-      else Nil
-    }
+  private def jarsIn(dir: os.Path): Seq[os.Path] =
+    if (os.isDir(dir))
+      os.list(dir).filter(_.last.toLowerCase(java.util.Locale.ROOT).endsWith(".jar"))
+    else Nil
+
+  private[ammonitesparkinternals] def expandClassPathEntry(entry: String): Seq[os.Path] =
+    // The JVM expands "dir/*" class path entries to the JARs of "dir".
+    // We also accept "dir/*.jar", which means the same.
+    if (entry.endsWith("/*"))
+      jarsIn(os.Path(entry.stripSuffix("/*"), os.pwd))
+    else if (entry.endsWith("/*.jar"))
+      jarsIn(os.Path(entry.stripSuffix("/*.jar"), os.pwd))
     else {
       val path = os.Path(entry, os.pwd)
       if (os.exists(path)) Seq(path)
@@ -323,12 +324,14 @@ class AmmoniteSparkSessionBuilder(implicit
 
     val content = new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8)
 
+    // Same format as spark-defaults.conf: "key value" lines, '#' starting comments
     val extraProps = content
       .linesIterator
-      .toVector
-      .filter(!_.startsWith("#"))
+      .map(_.trim)
+      .filter(line => line.nonEmpty && !line.startsWith("#"))
       .map(_.split("\\s+", 2))
       .collect { case Array(k, v) => k -> v }
+      .toVector
 
     for ((k, v) <- extraProps if !ignore(k))
       config(k, v)
@@ -441,7 +444,9 @@ class AmmoniteSparkSessionBuilder(implicit
           .filter(AmmoniteSparkSessionBuilder.shouldPassToSpark)
           .map(_.toURI)
 
-        val firstNonSpecialClassLoader0 = firstNonSpecialClassLoader(cl).getOrElse(???)
+        val firstNonSpecialClassLoader0 = firstNonSpecialClassLoader(cl).getOrElse {
+          sys.error(s"No base class loader found in the hierarchy of $cl")
+        }
         val cp = AmmoniteSparkSessionBuilder.classpath(firstNonSpecialClassLoader0)
 
         (sessionJars0, cp)
@@ -580,7 +585,7 @@ class AmmoniteSparkSessionBuilder(implicit
         case Some(dir) =>
           printLine(
             s"Adding Hadoop conf dir ${AmmoniteSparkSessionBuilder.prettyDir(dir)} to classpath",
-            s"Adding Hadoop conf dir <code>${AmmoniteSparkSessionBuilder.prettyDir(dir)}<code> to classpath"
+            s"Adding Hadoop conf dir <code>${AmmoniteSparkSessionBuilder.prettyDir(dir)}</code> to classpath"
           )
           interpApi.load.cp(os.Path(dir))
       }

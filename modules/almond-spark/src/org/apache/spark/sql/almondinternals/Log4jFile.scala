@@ -1,6 +1,6 @@
 package org.apache.spark.sql.almondinternals
 
-import org.apache.log4j.{Category, Logger, RollingFileAppender}
+import org.apache.log4j.{Category, FileAppender, Logger}
 
 import java.io.File
 
@@ -10,14 +10,15 @@ object Log4jFile {
 
   def logFile(clazz: Class[_]): Option[File] = {
 
-    def appenders(log: Category): Stream[Any] =
+    def appenders(log: Category): Iterator[Any] =
       if (log == null)
-        Stream()
+        Iterator.empty
       else
-        log.getAllAppenders.asScala.toStream #::: appenders(log.getParent)
+        log.getAllAppenders.asScala ++ appenders(log.getParent)
 
+    // FileAppender also matches its subclasses, like RollingFileAppender
     appenders(Logger.getLogger(clazz)).collectFirst {
-      case rfa: RollingFileAppender => new File(rfa.getFile)
+      case fa: FileAppender if fa.getFile != null => new File(fa.getFile)
     }
   }
 
