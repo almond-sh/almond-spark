@@ -17,12 +17,7 @@ final class StageElem(
   useBars: Boolean
 ) {
 
-  private val htmlName = {
-    val sep = " at "
-    val idx = name.indexOf(sep)
-    if (idx < 0) s"<code>$name</code>"
-    else s"<code>${name.take(idx)}</code> at <code>${name.drop(idx + sep.length)}</code>"
-  }
+  private val htmlName = StageElem.htmlName(name)
 
   val displayId      = s"stage-info-${Id.generate()}"
   val titleDisplayId = s"$displayId-title"
@@ -44,6 +39,7 @@ final class StageElem(
     stageDone0 = true
   }
 
+  // Not used any more, kept for binary compatibility
   val extraStyle = Seq(
     "word-wrap: normal",
     "white-space: nowrap",
@@ -55,14 +51,7 @@ final class StageElem(
   ): Unit =
     if (useBars)
       publish.html(
-        s"""<div class="progress">
-           |  <div class="progress-bar bg-success" role="progressbar" style="width: 0%; ${extraStyle.mkString(
-            "; "
-          )}; color: white" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-           |    0 / $numTasks
-           |  </div>
-           |</div>
-           |""".stripMargin,
+        StageElem.barHtml(htmlName, numTasks, doneTasks = 0, startedTasks = 0),
         id = displayId
       )
     else
@@ -79,23 +68,11 @@ final class StageElem(
 
     val donePct = math.round(100.0 * doneTasks0.toDouble / numTasks).toInt
 
-    if (useBars) {
-      val diff       = startedTasks0 - doneTasks0
-      val startedPct = math.round(100.0 * (startedTasks0 - doneTasks0).toDouble / numTasks).toInt
-
-      val extraStylePart = extraStyle.mkString("; ")
-      val diffPart       = if (diff == 0) "" else s" + $diff"
+    if (useBars)
       publish.updateHtml(
-        s"""<div class="progress">
-           |  <div class="progress-bar" role="progressbar" style="background-color: blue; width: $donePct%; $extraStylePart; color: white" aria-valuenow="$donePct" aria-valuemin="0" aria-valuemax="100">
-           |    $doneTasks0$diffPart / $numTasks
-           |  </div>
-           |  <div class="progress-bar" role="progressbar" style="background-color: red; width: $startedPct%" aria-valuenow="$startedPct" aria-valuemin="0" aria-valuemax="100"></div>
-           |</div>
-           |""".stripMargin,
+        StageElem.barHtml(htmlName, numTasks, doneTasks0, startedTasks0),
         id = displayId
       )
-    }
     else {
       val taskOrTasks = if (numTasks <= 1) "task" else "tasks"
       val onGoingMessage =
@@ -145,6 +122,66 @@ object StageElem {
     )
     executor.setKeepAliveTime(keepAlive.length, keepAlive.unit)
     executor
+  }
+
+  private def escape(s: String): String =
+    s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
+
+  /** The stage name as HTML, like `<code>count</code> at <code>cmd3.sc:2</code>` */
+  private[almondinternals] def htmlName(name: String): String = {
+    val sep = " at "
+    val idx = name.indexOf(sep)
+    if (idx < 0) s"<code>${escape(name)}</code>"
+    else
+      s"<code>${escape(name.take(idx))}</code> at <code>${escape(name.drop(idx + sep.length))}</code>"
+  }
+
+  private def pct(count: Int, numTasks: Int): Int =
+    if (numTasks <= 0) 0
+    else math.max(0, math.min(100, math.round(100.0 * count.toDouble / numTasks).toInt))
+
+  /** A progress bar, with the stage name and task counts, as HTML
+    *
+    * Styled inline, so that it renders the same in JupyterLab, Jupyter Notebook, or any other
+    * front-end, without relying on a CSS framework. Colors come from the JupyterLab theme when
+    * available (so that bars look right with its dark theme too), with fallbacks for other
+    * front-ends.
+    *
+    * The bar shows the completed tasks, followed by the on-going ones in a lighter color.
+    */
+  private[almondinternals] def barHtml(
+    htmlName: String,
+    numTasks: Int,
+    doneTasks: Int,
+    startedTasks: Int
+  ): String = {
+    val donePct    = pct(doneTasks, numTasks)
+    val onGoingPct = math.min(100 - donePct, pct(startedTasks - doneTasks, numTasks))
+    val onGoing    = startedTasks - doneTasks
+    val counts =
+      if (onGoing <= 0) s"$doneTasks / $numTasks"
+      else s"$doneTasks + $onGoing / $numTasks"
+    val trackStyle = Seq(
+      "flex: 1 1 auto",
+      "min-width: 6em",
+      "height: 0.8em",
+      "display: flex",
+      "overflow: hidden",
+      "border-radius: 0.4em",
+      "background-color: var(--jp-layout-color3, #e0e0e0)"
+    ).mkString("; ")
+    val doneStyle =
+      s"width: $donePct%; background-color: var(--jp-brand-color1, #1976d2)"
+    val onGoingStyle =
+      s"width: $onGoingPct%; background-color: var(--jp-brand-color3, #90caf9)"
+    s"""<div style="display: flex; align-items: center; gap: 0.75em; margin: 0.2em 0">
+       |  <div style="flex: 0 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">$htmlName</div>
+       |  <div role="progressbar" aria-valuenow="$donePct" aria-valuemin="0" aria-valuemax="100" style="$trackStyle">
+       |    <div style="$doneStyle"></div>
+       |    <div style="$onGoingStyle"></div>
+       |  </div>
+       |  <div style="flex: 0 0 auto; white-space: nowrap; font-variant-numeric: tabular-nums">$counts</div>
+       |</div>""".stripMargin
   }
 
 }
